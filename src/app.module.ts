@@ -6,9 +6,11 @@ import { WeatherModule } from './weather/weather.module';
 import { FlightsModule } from './flights/flights.module';
 import { Flight } from './flights/entities/flight.entity';
 import { LoggerService } from './logger.service';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
+    CacheModule.register({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
@@ -24,5 +26,6 @@ import { LoggerService } from './logger.service';
     FlightsModule,
   ],
   providers: [LoggerService],
+  // controllers:
 })
 export class AppModule {}

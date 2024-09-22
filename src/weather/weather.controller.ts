@@ -1,10 +1,14 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, UseInterceptors } from '@nestjs/common';
 import { WeatherService } from './weather.service';
+import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
 
 @Controller('weather')
 export class WeatherController {
   constructor(private readonly weatherService: WeatherService) {}
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('cache-key')
+  @CacheTTL(3000)
   @Get()
   findAll() {
     return this.weatherService.findAll();
