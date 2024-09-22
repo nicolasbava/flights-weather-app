@@ -1,6 +1,11 @@
 {
     "cSpell.words": [
         "devbyseb",
-        "typeorm"
+        "generationtime",
+        "iata",
+        "typeorm",
+        "weathercode",
+        "winddirection",
+        "windspeed"
     ]
 }

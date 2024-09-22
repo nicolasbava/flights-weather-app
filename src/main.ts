@@ -6,7 +6,7 @@ import { LoggerService } from './logger.service';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const loggerService = app.get(LoggerService);
-  loggerService.logMessageTimes('Boca campeon!', 7);
+  loggerService.logMessageTimes('Boca campeón!', 7);
 
   await app.listen(3000);
 }
