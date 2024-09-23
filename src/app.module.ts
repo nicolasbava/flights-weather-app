@@ -7,10 +7,17 @@ import { FlightsModule } from './flights/flights.module';
 import { Flight } from './flights/entities/flight.entity';
 import { LoggerService } from './logger.service';
 import { CacheModule } from '@nestjs/cache-manager';
-
 @Module({
   imports: [
-    CacheModule.register({ isGlobal: true }),
+    // ConfigModule.forRoot(),
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 50000, // Cache expiration time in milliseconds
+      max: 10, // Maximum number of items in cache
+      // store: redisStore,
+      // host: 'localhost',
+      // port: 6973,
+    }),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
