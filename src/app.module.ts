@@ -7,16 +7,21 @@ import { FlightsModule } from './flights/flights.module';
 import { Flight } from './flights/entities/flight.entity';
 import { LoggerService } from './logger.service';
 import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-redis-store';
+import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
-    // ConfigModule.forRoot(),
+    ConfigModule.forRoot(),
     CacheModule.register({
       isGlobal: true,
       ttl: 50000, // Cache expiration time in milliseconds
-      max: 10, // Maximum number of items in cache
-      // store: redisStore,
-      // host: 'localhost',
-      // port: 6973,
+      max: 5, // Maximum number of items in cache
+      store: redisStore,
+      host: 'localhost',
+      port: process.env.REDIS_PORT,
+      // username: process.env.REDIS_USERNAME,
+      // password: process.env.REDIS_PASSWORD,
+      // no_ready_check: true,
     }),
     TypeOrmModule.forRoot({
       type: 'mysql',

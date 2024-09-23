@@ -64,13 +64,9 @@ export class WeatherService {
   async findAll() {
     // Check cache for existing data
     const cachedData = await this.cacheService.get('flightsWeathers');
-    console.log('cachedData', cachedData);
-    if (cachedData) {
-      console.log(`>>>>>> Getting data from cache!`);
-      return cachedData;
-    }
 
-    console.log('REQUEST MADE ');
+    if (cachedData) return cachedData;
+
     // If no cached data, proceed to fetch flights and weather
     const airportSet: Set<string> = new Set();
     const nonRepeatedAirports: Array<Airport> = [];

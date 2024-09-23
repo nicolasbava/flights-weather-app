@@ -3,6 +3,7 @@
         "devbyseb",
         "generationtime",
         "iata",
+        "nestjs",
         "typeorm",
         "weathercode",
         "winddirection",

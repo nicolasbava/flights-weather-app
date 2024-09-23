@@ -9,28 +9,27 @@ jest.mock('node-fetch'); // If you are using 'node-fetch' for the weather API ca
 const getWeatherByLatLong = jest.fn();
 
 describe('WeatherService', () => {
-  let service: WeatherService;
-  let flightsService: FlightsService;
+  // let service: WeatherService;
+  // let flightsService: FlightsService;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        WeatherService,
-        {
-          provide: FlightsService, // Mock the FlightsService here
-          useValue: {
-            findAll: jest.fn(), // Mock the methods you'll use
-          },
-        },
-        {
-          provide: 'getWeatherByLatLong', // Assuming this is a provider in your module
-          useValue: getWeatherByLatLong,
-        },
-      ],
-    }).compile();
-
-    service = module.get<WeatherService>(WeatherService);
-    flightsService = module.get<FlightsService>(FlightsService);
+    // const module: TestingModule = await Test.createTestingModule({
+    //   providers: [
+    //     WeatherService,
+    //     {
+    //       provide: FlightsService, // Mock the FlightsService here
+    //       useValue: {
+    //         findAll: jest.fn(), // Mock the methods you'll use
+    //       },
+    //     },
+    //     {
+    //       provide: 'getWeatherByLatLong', // Assuming this is a provider in your module
+    //       useValue: getWeatherByLatLong,
+    //     },
+    //   ],
+    // }).compile();
+    // service = module.get<WeatherService>(WeatherService);
+    // flightsService = module.get<FlightsService>(FlightsService);
   });
 
   afterEach(() => {
@@ -156,17 +155,17 @@ describe('WeatherService', () => {
     });
 
     it('should correctly combine weather and flight data for a large dataset', async () => {
-      const flightsMock = new Array(3000).fill(null).map((_, i) => ({
-        id: i + 1,
-        originIataCode: 'TLC',
-        originName: 'Licenciado Adolfo Lopez Mateos International Airport',
-        originLatitude: '19.3371000',
-        originLongitude: '-99.5660000',
-        destinationIataCode: 'MTY',
-        destinationName: 'General Mariano Escobedo International Airport',
-        destinationLatitude: '25.7785000',
-        destinationLongitude: '-100.1070000',
-      }));
+      // const flightsMock = new Array(3000).fill(null).map((_, i) => ({
+      //   id: i + 1,
+      //   originIataCode: 'TLC',
+      //   originName: 'Licenciado Adolfo Lopez Mateos International Airport',
+      //   originLatitude: '19.3371000',
+      //   originLongitude: '-99.5660000',
+      //   destinationIataCode: 'MTY',
+      //   destinationName: 'General Mariano Escobedo International Airport',
+      //   destinationLatitude: '25.7785000',
+      //   destinationLongitude: '-100.1070000',
+      // }));
 
       const weatherMock = {
         elevation: 2580,

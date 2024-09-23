@@ -3,10 +3,10 @@ import { WeatherService } from './weather.service';
 import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
 
 @Controller('weather')
+@UseInterceptors(CacheInterceptor)
 export class WeatherController {
   constructor(private readonly weatherService: WeatherService) {}
 
-  @UseInterceptors(CacheInterceptor)
   @CacheKey('cache-key')
   @CacheTTL(3000)
   @Get()

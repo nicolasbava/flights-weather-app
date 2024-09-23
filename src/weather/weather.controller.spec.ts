@@ -5,7 +5,7 @@ import { FlightsService } from '../flights/flights.service';
 
 describe('WeatherController', () => {
   let controller: WeatherController;
-  let flightsService: FlightsService;
+  // let flightsService: FlightsService;
 
   beforeEach(async () => {
     const mockFlightsService = {
@@ -22,7 +22,7 @@ describe('WeatherController', () => {
     }).compile();
 
     controller = module.get<WeatherController>(WeatherController);
-    flightsService = module.get<FlightsService>(FlightsService);
+    // flightsService = module.get<FlightsService>(FlightsService);
   });
 
   it('should be defined', () => {
