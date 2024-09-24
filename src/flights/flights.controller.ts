@@ -21,6 +21,7 @@ export class FlightsController {
 
   @Get('/weather')
   async findAllFlightsWeather() {
+    // await this.cacheOwnService.resetCache()
     const flightsWeatherData = await this.cacheOwnService.getOrFetch<
       FlightWithWeather[]
     >(

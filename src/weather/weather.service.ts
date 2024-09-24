@@ -12,13 +12,17 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { CacheOwnService } from 'src/cache/cache.service';
 
 @Injectable()
 export class WeatherService {
   constructor(
     private readonly flightsService: FlightsService,
+    private readonly cacheOwnService: CacheOwnService,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
   ) {}
+
+  private readonly WEATHER_CACHE_KEY = 'flightsWeathers';
 
   public async fetchFlightsWeatherData(): Promise<FlightWithWeather[]> {
     const allFlights = await this.flightsService.findAll();
@@ -106,31 +110,11 @@ export class WeatherService {
     });
   }
 
-  public async findAll() {
-    const cachedData = await this.cacheService.get('flightsWeathers');
-    if (cachedData) return cachedData;
-
-    const allFlights = await this.flightsService.findAll();
-
-    // Extraer aeropuertos únicos
-    const allAirportsNonRepeated =
-      this.flightsService.extractAirportsFromFlights(allFlights);
-
-    // Obtener el clima de los aeropuertos
-    const airportsWithWeather = await this.addWeatherToAirports(
-      allAirportsNonRepeated,
-    );
-
-    // Combinar vuelos con la información del clima
-    const combinedFlightsWithWeather = this.combineFlightsWithWeather(
-      allFlights,
-      airportsWithWeather,
-    );
-
-    // Almacenar en caché el resultado
-    await this.cacheService.set('flightsWeathers', combinedFlightsWithWeather);
-
-    return combinedFlightsWithWeather;
+  public async getOrFetchWeathersFlight() {
+    const flightsWeatherData = await this.cacheOwnService.getOrFetch<
+      FlightWithWeather[]
+    >(this.WEATHER_CACHE_KEY, async () => await this.fetchFlightsWeatherData());
+    return flightsWeatherData;
   }
 
   findOne(id: number) {
@@ -183,3 +167,30 @@ export class WeatherService {
     }
   }
 }
+
+// public async findAll() {
+//   const cachedData = await this.cacheService.get('flightsWeathers');
+//   if (cachedData) return cachedData;
+
+//   const allFlights = await this.flightsService.findAll();
+
+//   // Extraer aeropuertos únicos
+//   const allAirportsNonRepeated =
+//     this.flightsService.extractAirportsFromFlights(allFlights);
+
+//   // Obtener el clima de los aeropuertos
+//   const airportsWithWeather = await this.addWeatherToAirports(
+//     allAirportsNonRepeated,
+//   );
+
+//   // Combinar vuelos con la información del clima
+//   const combinedFlightsWithWeather = this.combineFlightsWithWeather(
+//     allFlights,
+//     airportsWithWeather,
+//   );
+
+//   // Almacenar en caché el resultado
+//   await this.cacheService.set('flightsWeathers', combinedFlightsWithWeather);
+
+//   return combinedFlightsWithWeather;
+// }

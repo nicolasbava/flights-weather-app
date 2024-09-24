@@ -7,14 +7,34 @@ import { Flight } from './flights/entities/flight.entity';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule } from '@nestjs/config';
 import * as redisStore from 'cache-manager-redis-store';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AppService } from './app.service';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
+
+const CacheConfig = {
+  MAX_ITEMS: 5,
+  LIFETIME_SECONDS: 30,
+};
+
+const ThrottlingConfig = {
+  MAX_REQUESTS_PER_MINUTE: 200,
+  TIME_WINDOW_MS: 1000,
+};
+
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        ttl: ThrottlingConfig.TIME_WINDOW_MS / 1000,
+        limit: ThrottlingConfig.MAX_REQUESTS_PER_MINUTE,
+      },
+    ]),
     ConfigModule.forRoot(),
     CacheModule.register({
       isGlobal: true,
-      ttl: 3600000, // Cache expiration time in milliseconds
-      max: 5, // Maximum number of items in cache
+      ttl: CacheConfig.LIFETIME_SECONDS,
+      max: CacheConfig.MAX_ITEMS,
       store: redisStore,
       host: 'localhost',
       port: process.env.REDIS_PORT,
@@ -26,12 +46,20 @@ import { AppController } from './app.controller';
       username: 'root',
       password: '',
       database: 'weather-flights-db',
-      entities: [Flight], // Aquí va tu entidad
-      synchronize: true, // true solo en desarrollo para auto sincronizar el esquema
+      entities: [Flight],
+      synchronize: true,
     }),
     WeatherModule,
     FlightsModule,
     AppModule,
   ],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
+  controllers: [AppController],
 })
 export class AppModule {}
