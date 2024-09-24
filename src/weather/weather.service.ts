@@ -1,58 +1,17 @@
 import {
+  Airport,
+  Flight,
+  FlightWithWeather,
+} from 'src/flights/flights.interfaces';
+import { AirportWithWeather, Weather } from './weather.interfaces';
+import { FlightsService } from '../flights/flights.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import {
   Inject,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { FlightsService } from '../flights/flights.service';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-// import { Flight } from 'src/flights/entities/flight.entity';
-import { Cache } from 'cache-manager';
-
-interface Airport {
-  iataCode: string;
-  name: string;
-  latitude: string;
-  longitude: string;
-}
-
-type CurrentWeatherUnits = {
-  time: string;
-  interval: string;
-  temperature: string;
-  windspeed: string;
-  winddirection: string;
-  is_day: string;
-  weathercode: string;
-};
-
-type CurrentWeather = {
-  time: string;
-  interval: number;
-  temperature: number;
-  windspeed: number;
-  winddirection: number;
-  is_day: 1 | 0;
-  weathercode: number;
-};
-
-interface Weather {
-  latitude: number;
-  longitude: number;
-  generationtime_ms: number;
-  utc_offset_seconds: string;
-  timezone: number;
-  timezone_abbreviation: string;
-  elevation: number;
-  current_weather_units: CurrentWeatherUnits;
-  current_weather: CurrentWeather;
-}
-
-const getWeatherByLatLong = async (latitude: string, longitude: string) => {
-  const weather = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`,
-  );
-  return weather;
-};
 
 @Injectable()
 export class WeatherService {
@@ -61,102 +20,80 @@ export class WeatherService {
     @Inject(CACHE_MANAGER) private cacheService: Cache,
   ) {}
 
-  async findAll() {
-    // Check cache for existing data
-    const cachedData = await this.cacheService.get('flightsWeathers');
-
-    if (cachedData) return cachedData;
-
-    // If no cached data, proceed to fetch flights and weather
-    const airportSet: Set<string> = new Set();
-    const nonRepeatedAirports: Array<Airport> = [];
+  public async fetchFlightsWeatherData(): Promise<FlightWithWeather[]> {
     const allFlights = await this.flightsService.findAll();
+    const allAirportsNonRepeated =
+      this.flightsService.extractAirportsFromFlights(allFlights);
+    const combineAirportsWithWeather = await this.addWeatherToAirports(
+      allAirportsNonRepeated,
+    );
+    return this.combineFlightsWithWeather(
+      allFlights,
+      combineAirportsWithWeather,
+    );
+  }
 
-    const addAirport = (
-      iataCode: string,
-      name: string,
-      latitude: string,
-      longitude: string,
-    ) => {
-      const airportKey = `${iataCode}`;
-      if (!airportSet.has(airportKey)) {
-        airportSet.add(airportKey);
-        nonRepeatedAirports.push({
-          iataCode,
-          name,
-          latitude,
-          longitude,
-        });
-      }
+  public async getWeatherByLatLong(latitude: string, longitude: string) {
+    const weather = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`,
+    );
+    return weather.json();
+  }
+
+  public transformWeatherData(weather: Weather) {
+    return {
+      elevation: `${weather.elevation}m`,
+      temperature: `${weather.current_weather.temperature}${weather.current_weather_units.temperature}`,
+      windSpeed: `${weather.current_weather.windspeed}${weather.current_weather_units.windspeed}`,
+      windDirection: `${weather.current_weather.winddirection}${weather.current_weather_units.winddirection}`,
+      weatherCode: `${weather.current_weather.weathercode} ${weather.current_weather_units.weathercode}`,
+      isDay: weather.current_weather.is_day === 1 ? true : false,
     };
+  }
 
-    const findWeatherByIataCode = (iataCode: string) => {
-      return addWeatherToAirports.find(
-        (airport) => airport.iataCode === iataCode,
-      );
-    };
+  public findAirportWeatherByIataCode(
+    iataCode: string,
+    airportsWithWeather: AirportWithWeather[],
+  ): AirportWithWeather | undefined {
+    return airportsWithWeather.find((airport) => airport.iataCode === iataCode);
+  }
 
-    const transformWeatherData = (weather: Weather) => {
-      return {
-        elevation: `${weather.elevation}m`,
-        temperature: `${weather.current_weather.temperature}${weather.current_weather_units.temperature}`,
-        windSpeed: `${weather.current_weather.windspeed}${weather.current_weather_units.windspeed}`,
-        windDirection: `${weather.current_weather.winddirection}${weather.current_weather_units.winddirection}`,
-        weatherCode: `${weather.current_weather.weathercode} ${weather.current_weather_units.weathercode}`,
-        isDay: 1 ? true : false,
-      };
-    };
-
-    const addAirportsToSet = () => {
-      allFlights.map((flight) => {
-        // Add response from origin
-        addAirport(
-          flight.originIataCode,
-          flight.originName,
-          String(flight.originLatitude),
-          String(flight.originLongitude),
-        );
-
-        // Add response from destination
-        addAirport(
-          flight.destinationIataCode,
-          flight.destinationName,
-          String(flight.destinationLatitude),
-          String(flight.destinationLongitude),
-        );
-      });
-    };
-
-    addAirportsToSet();
-
-    // const getWeathersOfAirports = () => {};
-
-    const addWeatherToAirports = await Promise.all(
+  public async addWeatherToAirports(
+    nonRepeatedAirports: Array<Airport>,
+  ): Promise<AirportWithWeather[]> {
+    return await Promise.all(
       nonRepeatedAirports.map(async (airport) => {
         try {
-          const allWeathersResponse = await getWeatherByLatLong(
+          const weather = await this.getWeatherByLatLong(
             airport.latitude,
             airport.longitude,
           );
-          const weather = await allWeathersResponse.json();
-          const weatherTransformed = transformWeatherData(weather);
-
+          const weatherTransformed = this.transformWeatherData(weather);
           return {
             ...airport,
             weatherTransformed,
           };
         } catch (err) {
           console.error('Error:', err);
-          throw new Error(`Failed to fetch weather data`);
+          throw new Error('Failed to fetch weather data');
         }
       }),
     );
+  }
 
-    // Combine information
-    const flightWeathersCombined = allFlights.map((flight) => {
-      const originWeather = findWeatherByIataCode(flight.originIataCode);
-      const destinationWeather = findWeatherByIataCode(
+  // Method to combine calculated airport weather with all flights data
+  public combineFlightsWithWeather(
+    flights: Flight[],
+    airportsWithWeather: AirportWithWeather[],
+  ) {
+    return flights.map((flight) => {
+      const originWeather = this.findAirportWeatherByIataCode(
+        flight.originIataCode,
+        airportsWithWeather,
+      );
+      const destinationWeather = this.findAirportWeatherByIataCode(
         flight.destinationIataCode,
+        airportsWithWeather,
       );
 
       return {
@@ -167,14 +104,33 @@ export class WeatherService {
           : null,
       };
     });
+  }
 
-    await this.cacheService.set('flightsWeathers', flightWeathersCombined[0]);
-    const data = await this.cacheService.get('flightsWeathers');
-    console.log('==== DATA BEIGN CALLED ====');
-    console.log('data set to cache', data);
-    console.log('==== END FUNCTION ====');
+  public async findAll() {
+    const cachedData = await this.cacheService.get('flightsWeathers');
+    if (cachedData) return cachedData;
 
-    return flightWeathersCombined;
+    const allFlights = await this.flightsService.findAll();
+
+    // Extraer aeropuertos únicos
+    const allAirportsNonRepeated =
+      this.flightsService.extractAirportsFromFlights(allFlights);
+
+    // Obtener el clima de los aeropuertos
+    const airportsWithWeather = await this.addWeatherToAirports(
+      allAirportsNonRepeated,
+    );
+
+    // Combinar vuelos con la información del clima
+    const combinedFlightsWithWeather = this.combineFlightsWithWeather(
+      allFlights,
+      airportsWithWeather,
+    );
+
+    // Almacenar en caché el resultado
+    await this.cacheService.set('flightsWeathers', combinedFlightsWithWeather);
+
+    return combinedFlightsWithWeather;
   }
 
   findOne(id: number) {
@@ -183,20 +139,16 @@ export class WeatherService {
 
   async findWeatherByIdFlight(idFlight: string) {
     try {
-      // Get flight details
-      const flight = await this.flightsService.findOneByFlight(idFlight);
-
+      const flight = await this.flightsService.findOneByFlightNum(idFlight);
       if (!flight) {
         throw new InternalServerErrorException(
           `Flight with ID ${idFlight} not found`,
         );
       }
-
       const originData = {
         latitude: flight.originLatitude,
         longitude: flight.originLongitude,
       };
-
       const destinationData = {
         latitude: flight.destinationLatitude,
         longitude: flight.destinationLongitude,
@@ -206,7 +158,6 @@ export class WeatherService {
       const responseO = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${originData.latitude}&longitude=${originData.longitude}&current_weather=true`,
       );
-
       const responseD = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${destinationData.latitude}&longitude=${destinationData.longitude}&current_weather=true`,
       );
@@ -214,23 +165,17 @@ export class WeatherService {
       if (!responseO.ok || !responseD.ok) {
         throw new Error('Failed to fetch weather data');
       }
-
       // Parse the weather data
-      // const weatherData = await responseO.json();
+      const originWeatherData = await responseO.json();
       const destWeatherData = await responseD.json();
-
-      // console.log('weatherOrigin ->', weatherData);
-
       // Return the weather data
-      // return {
-      //   flightId: idFlight,
-      //   origin: flight.origin,
-      //   destination: flight.destination,
-      //   originWeather: weatherData.current_weather,
-      //   destinationWeather: destWeatherData.current_weather,
-      // };
-
-      return destWeatherData;
+      return {
+        flightId: idFlight,
+        origin: flight.origin,
+        destination: flight.destination,
+        originWeather: this.transformWeatherData(originWeatherData),
+        destinationWeather: this.transformWeatherData(destWeatherData),
+      };
     } catch (error) {
       // Handle any errors that occur during the API call or flight lookup
       console.error('Error fetching weather data:', error);

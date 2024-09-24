@@ -2,10 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { WeatherController } from './weather.controller';
 import { WeatherService } from './weather.service';
 import { FlightsService } from '../flights/flights.service';
+import { CacheModule } from '@nestjs/cache-manager';
 
 describe('WeatherController', () => {
   let controller: WeatherController;
-  // let flightsService: FlightsService;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let flightsService: FlightsService;
 
   beforeEach(async () => {
     const mockFlightsService = {
@@ -14,6 +16,7 @@ describe('WeatherController', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
+      imports: [CacheModule.register()],
       controllers: [WeatherController],
       providers: [
         WeatherService,
@@ -22,7 +25,7 @@ describe('WeatherController', () => {
     }).compile();
 
     controller = module.get<WeatherController>(WeatherController);
-    // flightsService = module.get<FlightsService>(FlightsService);
+    flightsService = module.get<FlightsService>(FlightsService);
   });
 
   it('should be defined', () => {

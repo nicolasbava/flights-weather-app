@@ -8,5 +8,6 @@ import { FlightsModule } from 'src/flights/flights.module';
   controllers: [WeatherController],
   providers: [WeatherService],
   imports: [FlightsModule],
+  exports: [WeatherService],
 })
 export class WeatherModule {}
