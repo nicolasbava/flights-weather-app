@@ -2,7 +2,7 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { FlightsService } from './flights.service';
 import { WeatherService } from '../weather/weather.service';
 import { CacheOwnService } from '../cache/cache.service';
-import { Flight, FlightWithWeather } from './flights.interfaces';
+import { Flight } from './flights.interfaces';
 
 @Controller('flights')
 export class FlightsController {

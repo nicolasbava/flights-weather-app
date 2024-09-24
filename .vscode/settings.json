@@ -5,10 +5,12 @@
         "generationtime",
         "iata",
         "Mateos",
+        "METEO",
         "nestjs",
         "typeorm",
         "weathercode",
         "winddirection",
-        "windspeed"
+        "windspeed",
+        "XAMPP"
     ]
 }
