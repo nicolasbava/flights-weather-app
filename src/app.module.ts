@@ -7,6 +7,7 @@ import { Flight } from './flights/entities/flight.entity';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule } from '@nestjs/config';
 import * as redisStore from 'cache-manager-redis-store';
+import { AppController } from './app.controller';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -30,7 +31,7 @@ import * as redisStore from 'cache-manager-redis-store';
     }),
     WeatherModule,
     FlightsModule,
+    AppModule,
   ],
-  // controllers:
 })
 export class AppModule {}
