@@ -11,10 +11,10 @@ export class WeatherController {
     return this.weatherService.getOrFetchWeathersFlight();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.weatherService.findOne(+id);
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.weatherService.findOne(+id);
+  // }
 
   @Get('/flight/:id')
   findWeatherByIdFlight(@Param('id') idFlight: string) {

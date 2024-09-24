@@ -3,6 +3,7 @@ import { WeatherController } from './weather.controller';
 import { WeatherService } from './weather.service';
 import { FlightsService } from '../flights/flights.service';
 import { CacheModule } from '@nestjs/cache-manager';
+import { CacheOwnModule } from '../cache/cache.module';
 
 describe('WeatherController', () => {
   let controller: WeatherController;
@@ -16,7 +17,7 @@ describe('WeatherController', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [CacheModule.register()],
+      imports: [CacheModule.register(), CacheOwnModule],
       controllers: [WeatherController],
       providers: [
         WeatherService,

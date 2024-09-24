@@ -12,7 +12,7 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { CacheOwnService } from 'src/cache/cache.service';
+import { CacheOwnService } from '../cache/cache.service';
 
 @Injectable()
 export class WeatherService {

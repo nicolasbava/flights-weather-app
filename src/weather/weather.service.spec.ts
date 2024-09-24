@@ -4,6 +4,7 @@ import { FlightsService } from '../flights/flights.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 // import { Cache } from 'cache-manager';
 import { Weather } from './weather.interfaces';
+import { CacheOwnModule } from '../cache/cache.module';
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -35,6 +36,7 @@ describe('WeatherService', () => {
           useValue: mockCacheManager,
         },
       ],
+      imports: [CacheOwnModule],
     }).compile();
 
     weatherService = module.get<WeatherService>(WeatherService);

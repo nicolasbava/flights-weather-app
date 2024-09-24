@@ -19,18 +19,6 @@ export class FlightsController {
     return this.flightsService.findAll();
   }
 
-  @Get('/weather')
-  async findAllFlightsWeather() {
-    // await this.cacheOwnService.resetCache()
-    const flightsWeatherData = await this.cacheOwnService.getOrFetch<
-      FlightWithWeather[]
-    >(
-      this.WEATHER_CACHE_KEY,
-      async () => await this.weatherService.fetchFlightsWeatherData(),
-    );
-    return flightsWeatherData;
-  }
-
   @Get(':id')
   findOne(@Param('id') id: number): Promise<Flight> {
     return this.flightsService.findOne(+id);
